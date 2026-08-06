@@ -13,7 +13,7 @@ private data class NavigationItem(val route: String, val label: String, val symb
 
 private val navigationItems = listOf(
     NavigationItem(AppDestination.Home, "Home", "H"),
-    NavigationItem(AppDestination.Game, "Play", "P"),
+    NavigationItem(AppDestination.Levels, "Trail", "T"),
     NavigationItem(AppDestination.Scores, "Progress", "S"),
     NavigationItem(AppDestination.Settings, "Settings", "C")
 )

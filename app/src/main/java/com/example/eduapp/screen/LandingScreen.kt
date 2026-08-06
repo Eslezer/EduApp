@@ -66,7 +66,7 @@ fun LandingScreen(navController: NavHostController, viewModel: GameViewModel) {
                     Spacer(Modifier.height(12.dp))
                     TrailProgress(completed, PuzzleCatalog.puzzles.size)
                     Spacer(Modifier.height(18.dp))
-                    Button(onClick = { navController.navigate(AppDestination.Game) }) {
+                    Button(onClick = { navController.navigate(AppDestination.Levels) }) {
                         Text(if (completed == 0) "Start the trail" else "Continue your trail")
                     }
                 }
