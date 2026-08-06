@@ -1,5 +1,7 @@
 package com.example.eduapp.screen
 
+import android.media.AudioManager
+import android.media.ToneGenerator
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -24,10 +27,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -50,6 +55,9 @@ fun GameScreen(puzzleId: String, navController: NavHostController, viewModel: Ga
     var answer by rememberSaveable(puzzleId) { mutableStateOf("") }
     var feedback by rememberSaveable(puzzleId) { mutableStateOf<String?>(null) }
     var showHint by rememberSaveable(puzzleId) { mutableStateOf(false) }
+    var earnedScore by rememberSaveable(puzzleId) { mutableIntStateOf(0) }
+    val toneGenerator = remember { ToneGenerator(AudioManager.STREAM_MUSIC, 45) }
+    DisposableEffect(toneGenerator) { onDispose { toneGenerator.release() } }
 
     PuzzleScaffold(navController, AppDestination.Levels) { outerPadding ->
         Scaffold(topBar = {
@@ -105,7 +113,10 @@ fun GameScreen(puzzleId: String, navController: NavHostController, viewModel: Ga
                         when {
                             answer.isBlank() -> feedback = "Enter a number before checking."
                             normaliseAnswer(answer) == normaliseAnswer(puzzle.answer) -> {
-                                viewModel.recordCompletion(puzzle) { feedback = "Correct! Your trail progress was saved." }
+                                viewModel.recordCompletion(puzzle) { score ->
+                                    toneGenerator.startTone(ToneGenerator.TONE_PROP_ACK, 150)
+                                    earnedScore = score
+                                }
                             }
                             else -> {
                                 viewModel.recordWrongAttempt(puzzle)
@@ -129,5 +140,28 @@ fun GameScreen(puzzleId: String, navController: NavHostController, viewModel: Ga
                 Spacer(Modifier.height(16.dp))
             }
         }
+    }
+
+    if (earnedScore > 0) {
+        val nextPuzzle = PuzzleCatalog.puzzles.getOrNull(position)
+        AlertDialog(
+            onDismissRequest = { navController.navigate(AppDestination.Levels) { launchSingleTop = true } },
+            title = { Text("Trail star earned!") },
+            text = { Text("Great reasoning - you earned $earnedScore points for ${puzzle.title}.") },
+            confirmButton = {
+                Button(onClick = {
+                    if (nextPuzzle == null) {
+                        navController.navigate(AppDestination.Scores) { launchSingleTop = true }
+                    } else {
+                        navController.navigate(AppDestination.game(nextPuzzle.id))
+                    }
+                }) { Text(if (nextPuzzle == null) "See progress" else "Next puzzle") }
+            },
+            dismissButton = {
+                TextButton(onClick = { navController.navigate(AppDestination.Levels) { launchSingleTop = true } }) {
+                    Text("Puzzle map")
+                }
+            }
+        )
     }
 }
