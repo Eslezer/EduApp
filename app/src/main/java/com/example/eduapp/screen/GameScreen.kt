@@ -1,6 +1,7 @@
 package com.example.eduapp.screen
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -13,8 +14,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -22,21 +25,31 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.eduapp.helper.rememberAssetImage
 import com.example.eduapp.model.PuzzleCatalog
+import com.example.eduapp.model.normaliseAnswer
 import com.example.eduapp.navigation.AppDestination
+import com.example.eduapp.viewmodel.GameViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GameScreen(puzzleId: String, navController: NavHostController) {
+fun GameScreen(puzzleId: String, navController: NavHostController, viewModel: GameViewModel) {
     val puzzle = remember(puzzleId) { PuzzleCatalog.byId(puzzleId) }
     val image = rememberAssetImage(puzzle.imagePath)
     val position = PuzzleCatalog.indexOf(puzzle.id) + 1
+    var answer by rememberSaveable(puzzleId) { mutableStateOf("") }
+    var feedback by rememberSaveable(puzzleId) { mutableStateOf<String?>(null) }
+    var showHint by rememberSaveable(puzzleId) { mutableStateOf(false) }
 
     PuzzleScaffold(navController, AppDestination.Levels) { outerPadding ->
         Scaffold(topBar = {
@@ -68,6 +81,50 @@ fun GameScreen(puzzleId: String, navController: NavHostController) {
                     } else {
                         Text("This puzzle image could not be loaded.", Modifier.padding(28.dp), color = MaterialTheme.colorScheme.error)
                     }
+                }
+                if (showHint) {
+                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)) {
+                        Text("Hint: ${puzzle.hint}", Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onTertiaryContainer)
+                    }
+                }
+                OutlinedTextField(
+                    value = answer,
+                    onValueChange = { entered ->
+                        answer = entered.filter { it.isDigit() || it == '.' }.take(8)
+                        feedback = null
+                    },
+                    label = { Text("Your answer") },
+                    supportingText = { feedback?.let { Text(it) } },
+                    isError = feedback?.startsWith("Not") == true || feedback?.startsWith("Enter") == true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = {
+                        when {
+                            answer.isBlank() -> feedback = "Enter a number before checking."
+                            normaliseAnswer(answer) == normaliseAnswer(puzzle.answer) -> {
+                                viewModel.recordCompletion(puzzle) { feedback = "Correct! Your trail progress was saved." }
+                            }
+                            else -> {
+                                viewModel.recordWrongAttempt(puzzle)
+                                feedback = "Not quite - check each row and try again."
+                            }
+                        }
+                    }) { Text("Check answer") }
+                    TextButton(onClick = { showHint = !showHint }) { Text(if (showHint) "Hide hint" else "Show hint") }
+                }
+                androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(onClick = {
+                        viewModel.recordWrongAttempt(puzzle)
+                        answer = puzzle.answer
+                        showHint = false
+                        feedback = "Solution revealed. Check it to continue."
+                    }) { Text("Reveal solution") }
+                    TextButton(onClick = {
+                        navController.navigate(AppDestination.game(PuzzleCatalog.puzzles.random().id))
+                    }) { Text("Random puzzle") }
                 }
                 Spacer(Modifier.height(16.dp))
             }
