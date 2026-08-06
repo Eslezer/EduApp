@@ -7,16 +7,21 @@ import kotlinx.coroutines.flow.Flow
 class PuzzleRepository(private val dao: PuzzleProgressDao) {
     fun observeProgress(): Flow<List<PuzzleProgress>> = dao.observeAll()
 
-    suspend fun recordWrongAttempt(puzzle: Puzzle, existing: PuzzleProgress?) {
-        if (existing?.completedAt != null) return
-        dao.save((existing ?: PuzzleProgress(puzzle.id)).copy(attempts = (existing?.attempts ?: 0) + 1))
+    suspend fun recordWrongAttempt(puzzle: Puzzle): Int {
+        val existing = dao.getById(puzzle.id)
+        val updated = (existing ?: PuzzleProgress(puzzle.id)).copy(
+            attempts = (existing?.attempts ?: 0) + 1
+        )
+        dao.save(updated)
+        return updated.attempts
     }
 
     suspend fun recordCompletion(
         puzzle: Puzzle,
-        existing: PuzzleProgress?,
         awardPoints: Boolean = true
     ): Int {
+        // Read directly from Room so a recently saved wrong attempt cannot be missed.
+        val existing = dao.getById(puzzle.id)
         val attempts = (existing?.attempts ?: 0) + 1
         val score = scoreFor(attempts, awardPoints)
         dao.save(

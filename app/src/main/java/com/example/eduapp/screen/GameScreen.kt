@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,6 +29,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.getValue
@@ -40,6 +42,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.eduapp.helper.rememberAssetImage
+import com.example.eduapp.data.PuzzleRepository
 import com.example.eduapp.model.PuzzleCatalog
 import com.example.eduapp.model.normaliseAnswer
 import com.example.eduapp.navigation.AppDestination
@@ -56,6 +59,13 @@ fun GameScreen(puzzleId: String, navController: NavHostController, viewModel: Ga
     var showHint by rememberSaveable(puzzleId) { mutableStateOf(false) }
     var answerRevealed by rememberSaveable(puzzleId) { mutableStateOf(false) }
     var completionScore by rememberSaveable(puzzleId) { mutableStateOf<Int?>(null) }
+    var latestAttemptCount by rememberSaveable(puzzleId) { mutableStateOf<Int?>(null) }
+    val progress by viewModel.progress.collectAsState()
+    val storedProgress = progress.firstOrNull { it.puzzleId == puzzle.id }
+    val displayedAttempts = latestAttemptCount ?: storedProgress?.attempts ?: 0
+    val wrongAttempts = (displayedAttempts - if (storedProgress?.completedAt != null) 1 else 0)
+        .coerceAtLeast(0)
+    val currentReward = PuzzleRepository.scoreFor(wrongAttempts + 1, awardPoints = !answerRevealed)
     val toneGenerator = remember { ToneGenerator(AudioManager.STREAM_MUSIC, 45) }
     DisposableEffect(toneGenerator) { onDispose { toneGenerator.release() } }
 
@@ -95,6 +105,21 @@ fun GameScreen(puzzleId: String, navController: NavHostController, viewModel: Ga
                         Text("Hint: ${puzzle.hint}", Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onTertiaryContainer)
                     }
                 }
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text("CURRENT REWARD", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                            Text("$currentReward points", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                        }
+                        Column {
+                            Text("MISTAKES", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                            Text("$wrongAttempts wrong", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
                 OutlinedTextField(
                     value = answer,
                     onValueChange = { entered ->
@@ -119,8 +144,8 @@ fun GameScreen(puzzleId: String, navController: NavHostController, viewModel: Ga
                                 }
                             }
                             else -> {
-                                viewModel.recordWrongAttempt(puzzle)
-                                feedback = "Not quite - check each row and try again."
+                                viewModel.recordWrongAttempt(puzzle) { latestAttemptCount = it }
+                                feedback = "Not quite - 10 points deducted. Check each row and try again."
                             }
                         }
                     }) { Text("Check answer") }
@@ -128,7 +153,6 @@ fun GameScreen(puzzleId: String, navController: NavHostController, viewModel: Ga
                 }
                 androidx.compose.foundation.layout.Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TextButton(onClick = {
-                        viewModel.recordWrongAttempt(puzzle)
                         answer = puzzle.answer
                         answerRevealed = true
                         showHint = false

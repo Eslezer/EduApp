@@ -11,6 +11,9 @@ interface PuzzleProgressDao {
     @Query("SELECT * FROM puzzle_progress ORDER BY completedAt DESC")
     fun observeAll(): Flow<List<PuzzleProgress>>
 
+    @Query("SELECT * FROM puzzle_progress WHERE puzzleId = :puzzleId LIMIT 1")
+    suspend fun getById(puzzleId: String): PuzzleProgress?
+
     @Upsert
     suspend fun save(progress: PuzzleProgress)
 
