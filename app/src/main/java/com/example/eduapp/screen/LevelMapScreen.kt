@@ -47,7 +47,7 @@ fun LevelMapScreen(navController: NavHostController, viewModel: GameViewModel) {
                     val index = PuzzleCatalog.indexOf(puzzle.id)
                     val unlocked = index == 0 || PuzzleCatalog.puzzles[index - 1].id in completedIds || puzzle.id in completedIds
                     PuzzleMapCard(puzzle, unlocked, puzzle.id in completedIds) {
-                        navController.navigate(AppDestination.Game)
+                        navController.navigate(AppDestination.game(puzzle.id))
                     }
                 }
             }

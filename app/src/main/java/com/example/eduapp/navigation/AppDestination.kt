@@ -6,6 +6,9 @@ object AppDestination {
     const val Levels = "levels"
     const val Settings = "settings"
     const val Game = "game"
+    const val GamePattern = "game/{puzzleId}"
     const val Scores = "scores"
     const val TestDatabase = "test_database"
+
+    fun game(puzzleId: String): String = "$Game/$puzzleId"
 }

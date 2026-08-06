@@ -1,74 +1,76 @@
 package com.example.eduapp.screen
 
-import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.eduapp.helper.rememberAssetImage
+import com.example.eduapp.model.PuzzleCatalog
 import com.example.eduapp.navigation.AppDestination
 
 @OptIn(ExperimentalMaterial3Api::class)
-
 @Composable
-fun GameScreen(currentContext: Context, navController: NavHostController,
-               imagePath: String = "2/level02_pic03_4.jpg",
-               modifier: Modifier = Modifier) {
-    val imageBitmap = rememberAssetImage(imagePath)
-    PuzzleScaffold(navController, AppDestination.Game) { outerPadding ->
-        Scaffold(topBar = { TopAppBar(title = { Text("Game Screen") }) }) {
-            innerPadding ->
-        Column(modifier
-            .fillMaxSize()
-            .padding(outerPadding)
-            .padding(innerPadding)
-            .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center) {
-            Text(
-                text = "Displaying Asset Image",
-                style = MaterialTheme.typography.headlineMedium
+fun GameScreen(puzzleId: String, navController: NavHostController) {
+    val puzzle = remember(puzzleId) { PuzzleCatalog.byId(puzzleId) }
+    val image = rememberAssetImage(puzzle.imagePath)
+    val position = PuzzleCatalog.indexOf(puzzle.id) + 1
+
+    PuzzleScaffold(navController, AppDestination.Levels) { outerPadding ->
+        Scaffold(topBar = {
+            TopAppBar(
+                title = { Text("Puzzle $position of ${PuzzleCatalog.puzzles.size}", fontWeight = FontWeight.Bold) },
+                navigationIcon = { TextButton(onClick = { navController.popBackStack() }) { Text("Back") } },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            if (imageBitmap != null) {
-                Image(
-                    bitmap = imageBitmap,
-                    contentDescription = "Asset Image: $imagePath",
-                    modifier = Modifier.size(300.dp)
-                )
-            } else {
-                Text(
-                    text = "Error: Could not load image at $imagePath",
-                    color = MaterialTheme.colorScheme.error
-                )
+        }) { innerPadding ->
+            Column(
+                modifier = Modifier.fillMaxSize().padding(outerPadding).padding(innerPadding)
+                    .padding(horizontal = 20.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Text("CHAPTER ${puzzle.chapter} - ${puzzle.skill.uppercase()}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                Text(puzzle.title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+                Text("Study the picture and work out the value of the question mark.", style = MaterialTheme.typography.bodyLarge)
+                Card(
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    if (image != null) {
+                        Image(
+                            bitmap = image,
+                            contentDescription = "${puzzle.title} visual maths puzzle",
+                            modifier = Modifier.fillMaxWidth().height(310.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                    } else {
+                        Text("This puzzle image could not be loaded.", Modifier.padding(28.dp), color = MaterialTheme.colorScheme.error)
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "Path: assets/$imagePath",
-                style = MaterialTheme.typography.bodySmall
-            )
-            Button(onClick = { navController.navigate(AppDestination.Scores) })
-            { Text("Go to Score") }
         }
-    }
     }
 }

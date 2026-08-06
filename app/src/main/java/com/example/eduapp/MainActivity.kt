@@ -15,6 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.eduapp.navigation.AppDestination
+import com.example.eduapp.model.PuzzleCatalog
 import com.example.eduapp.screen.GameScreen
 import com.example.eduapp.screen.LandingScreen
 import com.example.eduapp.screen.LevelMapScreen
@@ -45,7 +46,10 @@ fun AppNav(currentContext: Context) {
         composable(AppDestination.Home) { LandingScreen(navController, gameViewModel) }
         composable(AppDestination.Levels) { LevelMapScreen(navController, gameViewModel) }
         composable(AppDestination.Settings) { SettingScreen(navController) }
-        composable(AppDestination.Game) { GameScreen(currentContext, navController) }
+        composable(AppDestination.GamePattern) { entry ->
+            val puzzleId = entry.arguments?.getString("puzzleId") ?: PuzzleCatalog.puzzles.first().id
+            GameScreen(puzzleId, navController)
+        }
         composable(AppDestination.Scores) { ScoreScreen(navController) }
         composable(AppDestination.TestDatabase) { TestDBScreen(currentContext) }
     }
