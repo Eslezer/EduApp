@@ -45,7 +45,7 @@ fun AppNav(currentContext: Context) {
     NavHost(navController = navController, startDestination = AppDestination.Home) {
         composable(AppDestination.Home) { LandingScreen(navController, gameViewModel) }
         composable(AppDestination.Levels) { LevelMapScreen(navController, gameViewModel) }
-        composable(AppDestination.Settings) { SettingScreen(navController) }
+        composable(AppDestination.Settings) { SettingScreen(navController, gameViewModel) }
         composable(AppDestination.GamePattern) { entry ->
             val puzzleId = entry.arguments?.getString("puzzleId") ?: PuzzleCatalog.puzzles.first().id
             GameScreen(puzzleId, navController, gameViewModel)
