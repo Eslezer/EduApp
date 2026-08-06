@@ -18,16 +18,17 @@ import com.example.eduapp.navigation.AppDestination
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LandingScreen(navController: NavHostController, modifier: Modifier = Modifier) {
-    Scaffold(
-        topBar = { TopAppBar(title = { Text("Landing Screen") }) }
-    ) {
+    PuzzleScaffold(navController, AppDestination.Home) { outerPadding ->
+        Scaffold(topBar = { TopAppBar(title = { Text("Landing Screen") }) }) {
             innerPadding ->
         Column(modifier
             .fillMaxSize()
+            .padding(outerPadding)
             .padding(innerPadding)
             .padding(16.dp)) {
             Button(onClick = { navController.navigate(AppDestination.Settings) })
             { Text("Go to Setting") }
         }
+    }
     }
 }

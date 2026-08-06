@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.eduapp.helper.rememberAssetImage
+import com.example.eduapp.navigation.AppDestination
 
 @OptIn(ExperimentalMaterial3Api::class)
 
@@ -29,12 +30,12 @@ fun GameScreen(currentContext: Context, navController: NavHostController,
                imagePath: String = "2/level02_pic03_4.jpg",
                modifier: Modifier = Modifier) {
     val imageBitmap = rememberAssetImage(imagePath)
-    Scaffold(
-        topBar = { TopAppBar(title = { Text("Game Screen") }) }
-    ) {
+    PuzzleScaffold(navController, AppDestination.Game) { outerPadding ->
+        Scaffold(topBar = { TopAppBar(title = { Text("Game Screen") }) }) {
             innerPadding ->
         Column(modifier
             .fillMaxSize()
+            .padding(outerPadding)
             .padding(innerPadding)
             .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -65,8 +66,9 @@ fun GameScreen(currentContext: Context, navController: NavHostController,
                 text = "Path: assets/$imagePath",
                 style = MaterialTheme.typography.bodySmall
             )
-            Button(onClick = {navController.navigate("score")})
+            Button(onClick = { navController.navigate(AppDestination.Scores) })
             { Text("Go to Score") }
         }
+    }
     }
 }
