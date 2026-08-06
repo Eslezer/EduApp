@@ -32,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -55,7 +54,8 @@ fun GameScreen(puzzleId: String, navController: NavHostController, viewModel: Ga
     var answer by rememberSaveable(puzzleId) { mutableStateOf("") }
     var feedback by rememberSaveable(puzzleId) { mutableStateOf<String?>(null) }
     var showHint by rememberSaveable(puzzleId) { mutableStateOf(false) }
-    var earnedScore by rememberSaveable(puzzleId) { mutableIntStateOf(0) }
+    var answerRevealed by rememberSaveable(puzzleId) { mutableStateOf(false) }
+    var completionScore by rememberSaveable(puzzleId) { mutableStateOf<Int?>(null) }
     val toneGenerator = remember { ToneGenerator(AudioManager.STREAM_MUSIC, 45) }
     DisposableEffect(toneGenerator) { onDispose { toneGenerator.release() } }
 
@@ -113,9 +113,9 @@ fun GameScreen(puzzleId: String, navController: NavHostController, viewModel: Ga
                         when {
                             answer.isBlank() -> feedback = "Enter a number before checking."
                             normaliseAnswer(answer) == normaliseAnswer(puzzle.answer) -> {
-                                viewModel.recordCompletion(puzzle) { score ->
+                                viewModel.recordCompletion(puzzle, awardPoints = !answerRevealed) { score ->
                                     toneGenerator.startTone(ToneGenerator.TONE_PROP_ACK, 150)
-                                    earnedScore = score
+                                    completionScore = score
                                 }
                             }
                             else -> {
@@ -130,8 +130,9 @@ fun GameScreen(puzzleId: String, navController: NavHostController, viewModel: Ga
                     TextButton(onClick = {
                         viewModel.recordWrongAttempt(puzzle)
                         answer = puzzle.answer
+                        answerRevealed = true
                         showHint = false
-                        feedback = "Solution revealed. Check it to continue."
+                        feedback = "Solution revealed. You can continue, but this puzzle will earn 0 points."
                     }) { Text("Reveal solution") }
                     TextButton(onClick = {
                         navController.navigate(AppDestination.game(PuzzleCatalog.puzzles.random().id))
@@ -142,12 +143,17 @@ fun GameScreen(puzzleId: String, navController: NavHostController, viewModel: Ga
         }
     }
 
-    if (earnedScore > 0) {
+    completionScore?.let { earnedScore ->
         val nextPuzzle = PuzzleCatalog.puzzles.getOrNull(position)
         AlertDialog(
             onDismissRequest = { navController.navigate(AppDestination.Levels) { launchSingleTop = true } },
             title = { Text("Trail star earned!") },
-            text = { Text("Great reasoning - you earned $earnedScore points for ${puzzle.title}.") },
+            text = {
+                Text(
+                    if (earnedScore == 0) "Puzzle completed. Revealed solutions earn 0 points."
+                    else "Great reasoning - you earned $earnedScore points for ${puzzle.title}."
+                )
+            },
             confirmButton = {
                 Button(onClick = {
                     if (nextPuzzle == null) {

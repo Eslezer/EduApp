@@ -29,8 +29,12 @@ class GameViewModel(private val repository: PuzzleRepository) : ViewModel() {
         repository.recordWrongAttempt(puzzle, progressFor(puzzle.id))
     }
 
-    fun recordCompletion(puzzle: Puzzle, onRecorded: (Int) -> Unit) = viewModelScope.launch {
-        onRecorded(repository.recordCompletion(puzzle, progressFor(puzzle.id)))
+    fun recordCompletion(
+        puzzle: Puzzle,
+        awardPoints: Boolean = true,
+        onRecorded: (Int) -> Unit
+    ) = viewModelScope.launch {
+        onRecorded(repository.recordCompletion(puzzle, progressFor(puzzle.id), awardPoints))
     }
 
     fun resetProgress() = viewModelScope.launch { repository.resetProgress() }

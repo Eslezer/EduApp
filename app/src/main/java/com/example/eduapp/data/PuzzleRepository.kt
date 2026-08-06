@@ -12,9 +12,13 @@ class PuzzleRepository(private val dao: PuzzleProgressDao) {
         dao.save((existing ?: PuzzleProgress(puzzle.id)).copy(attempts = (existing?.attempts ?: 0) + 1))
     }
 
-    suspend fun recordCompletion(puzzle: Puzzle, existing: PuzzleProgress?): Int {
+    suspend fun recordCompletion(
+        puzzle: Puzzle,
+        existing: PuzzleProgress?,
+        awardPoints: Boolean = true
+    ): Int {
         val attempts = (existing?.attempts ?: 0) + 1
-        val score = scoreFor(attempts)
+        val score = scoreFor(attempts, awardPoints)
         dao.save(
             (existing ?: PuzzleProgress(puzzle.id)).copy(
                 attempts = attempts,
@@ -28,12 +32,11 @@ class PuzzleRepository(private val dao: PuzzleProgressDao) {
     suspend fun resetProgress() = dao.clear()
 
     companion object {
-        /** A quick, accurate solution is rewarded without making later retries worthless. */
-        fun scoreFor(attempts: Int): Int = when (attempts) {
-            1 -> 150
-            2 -> 110
-            3 -> 80
-            else -> 50
+        /** Starts at 150 points and removes 10 for every wrong attempt. */
+        fun scoreFor(attempts: Int, awardPoints: Boolean = true): Int {
+            if (!awardPoints) return 0
+            val wrongAttempts = (attempts - 1).coerceAtLeast(0)
+            return (150 - wrongAttempts * 10).coerceAtLeast(0)
         }
     }
 }

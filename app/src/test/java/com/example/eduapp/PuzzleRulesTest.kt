@@ -22,7 +22,9 @@ class PuzzleRulesTest {
     @Test
     fun `first try receives the highest score`() {
         assertEquals(150, PuzzleRepository.scoreFor(1))
-        assertEquals(110, PuzzleRepository.scoreFor(2))
-        assertEquals(50, PuzzleRepository.scoreFor(9))
+        assertEquals(140, PuzzleRepository.scoreFor(2))
+        assertEquals(70, PuzzleRepository.scoreFor(9))
+        assertEquals(0, PuzzleRepository.scoreFor(99))
+        assertEquals(0, PuzzleRepository.scoreFor(1, awardPoints = false))
     }
 }
