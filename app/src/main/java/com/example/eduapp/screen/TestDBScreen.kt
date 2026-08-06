@@ -36,7 +36,7 @@ fun TestDBScreen(currentContext: Context, modifier: Modifier = Modifier) {
         currentContext,
         AppDatabase::class.java,
         "app_db"
-    ).build()
+    ).addMigrations(AppDatabase.MIGRATION_1_2).build()
     val factory = AppViewModelFactory(db.appDao())
     val viewModel: AppViewModel = viewModel(factory = factory)
     val users by viewModel.users.collectAsStateWithLifecycle(initialValue = emptyList())

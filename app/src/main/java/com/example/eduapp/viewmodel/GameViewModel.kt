@@ -43,6 +43,7 @@ class GameViewModelFactory(context: Context) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         val database = Room.databaseBuilder(appContext, AppDatabase::class.java, "puzzle-trail.db")
+            .addMigrations(AppDatabase.MIGRATION_1_2)
             .build()
         return GameViewModel(PuzzleRepository(database.puzzleProgressDao())) as T
     }
