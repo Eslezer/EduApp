@@ -13,6 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.eduapp.navigation.AppDestination
 import com.example.eduapp.screen.GameScreen
 import com.example.eduapp.screen.LandingScreen
 import com.example.eduapp.screen.ScoreScreen
@@ -33,18 +34,15 @@ class MainActivity : ComponentActivity() {
     }
 }
 @Composable
-fun AppNav(currentContext: Context){
-    //obtain navController
+fun AppNav(currentContext: Context) {
     val navController = rememberNavController()
-    //set navHost and the routes
-    NavHost(navController = navController, startDestination = "landing") {
-        composable("landing") { LandingScreen(navController) }
-        composable("setting") { SettingScreen(navController) }
-        composable("game") { GameScreen(currentContext, navController) }
-        composable("score") { ScoreScreen(navController) }
-        composable("testDB") { TestDBScreen(currentContext) }
+    NavHost(navController = navController, startDestination = AppDestination.Home) {
+        composable(AppDestination.Home) { LandingScreen(navController) }
+        composable(AppDestination.Settings) { SettingScreen(navController) }
+        composable(AppDestination.Game) { GameScreen(currentContext, navController) }
+        composable(AppDestination.Scores) { ScoreScreen(navController) }
+        composable(AppDestination.TestDatabase) { TestDBScreen(currentContext) }
     }
-
 }
 
 @Preview(showBackground = true)

@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.eduapp.navigation.AppDestination
 
 //landing screen
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,7 +26,7 @@ fun LandingScreen(navController: NavHostController, modifier: Modifier = Modifie
             .fillMaxSize()
             .padding(innerPadding)
             .padding(16.dp)) {
-            Button(onClick = {navController.navigate("setting")})
+            Button(onClick = { navController.navigate(AppDestination.Settings) })
             { Text("Go to Setting") }
         }
     }

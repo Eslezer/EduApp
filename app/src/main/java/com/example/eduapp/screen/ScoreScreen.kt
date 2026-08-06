@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.eduapp.navigation.AppDestination
 
 //Score Screen
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,7 +26,7 @@ fun ScoreScreen(navController: NavHostController, modifier: Modifier = Modifier)
             .fillMaxSize()
             .padding(innerPadding)
             .padding(16.dp)) {
-            Button(onClick = {navController.navigate("landing")})
+            Button(onClick = { navController.navigate(AppDestination.Home) })
             { Text("Go back to landing") }
         }
     }

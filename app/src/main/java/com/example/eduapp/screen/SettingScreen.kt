@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.eduapp.navigation.AppDestination
 
 //Setting screen
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,7 +26,7 @@ fun SettingScreen(navController: NavHostController, modifier: Modifier = Modifie
             .fillMaxSize()
             .padding(innerPadding)
             .padding(16.dp)) {
-            Button(onClick = {navController.navigate("game")})
+            Button(onClick = { navController.navigate(AppDestination.Game) })
             { Text("Play Game") }
         }
     }
