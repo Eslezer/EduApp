@@ -50,7 +50,7 @@ fun AppNav(currentContext: Context) {
             val puzzleId = entry.arguments?.getString("puzzleId") ?: PuzzleCatalog.puzzles.first().id
             GameScreen(puzzleId, navController, gameViewModel)
         }
-        composable(AppDestination.Scores) { ScoreScreen(navController) }
+        composable(AppDestination.Scores) { ScoreScreen(navController, gameViewModel) }
         composable(AppDestination.TestDatabase) { TestDBScreen(currentContext) }
     }
 }
